@@ -1,9 +1,10 @@
-"""Minimal signed-token authentication for the first production-hardening slice."""
+"""Authentication support for legacy signed tokens and optional Firebase ID tokens."""
 
 import base64
 import hashlib
 import hmac
 import json
+import os
 import secrets
 import time
 from typing import Any
@@ -13,8 +14,51 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from config import settings
 
+try:
+    import firebase_admin
+    from firebase_admin import auth as firebase_auth
+    from firebase_admin import credentials
+except ImportError:  # pragma: no cover - optional dependency
+    firebase_admin = None
+    firebase_auth = None
+    credentials = None
+
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def _initialize_firebase() -> None:
+    if firebase_admin is None:
+        return
+    if firebase_admin._apps:
+        return
+    project_id = os.getenv("FIREBASE_PROJECT_ID")
+    service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT")
+    if not project_id and not service_account_json:
+        return
+
+    if service_account_json:
+        try:
+            config = json.loads(service_account_json)
+            firebase_admin.initialize_app(credentials.Certificate(config), {"projectId": project_id or config.get("project_id")})
+            return
+        except (TypeError, ValueError, json.JSONDecodeError):
+            pass
+
+    firebase_admin.initialize_app(options={"projectId": project_id} if project_id else None)
+
+
+_initialize_firebase()
+
+
+def verify_firebase_token(token: str) -> dict[str, Any] | None:
+    if firebase_auth is None:
+        return None
+    try:
+        decoded = firebase_auth.verify_id_token(token)
+        return {"email": decoded.get("email")}
+    except Exception:
+        return None
 
 
 def _password_digest(password: str, salt: bytes) -> bytes:
@@ -59,6 +103,10 @@ def get_current_user(
 ) -> dict[str, Any]:
     if not credentials or credentials.scheme.lower() != "bearer":
         raise HTTPException(status_code=401, detail="Authentication required")
+
+    firebase_user = verify_firebase_token(credentials.credentials)
+    if firebase_user:
+        return firebase_user
 
     try:
         encoded_payload, signature = credentials.credentials.split(".", 1)

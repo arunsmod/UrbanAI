@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import { apiService } from './services/api';
 import { Menu } from 'lucide-react';
+import { isFirebaseAuthEnabled, signInWithUrbanAI, signOutUrbanAI } from './firebase';
 
 // Pages
 import Overview from './pages/Overview';
@@ -60,13 +61,25 @@ export default function App() {
   };
 
   const handleLogin = async (email, password) => {
+    if (isFirebaseAuthEnabled) {
+      const userCredential = await signInWithUrbanAI(email, password);
+      const firebaseToken = await userCredential.user.getIdToken();
+      localStorage.setItem('urbanai-token', firebaseToken);
+      localStorage.setItem('urbanai-user', JSON.stringify({ email: userCredential.user.email }));
+      setUser({ email: userCredential.user.email });
+      return;
+    }
+
     const session = await apiService.login(email, password);
     localStorage.setItem('urbanai-token', session.access_token);
     localStorage.setItem('urbanai-user', JSON.stringify(session.user));
     setUser(session.user);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isFirebaseAuthEnabled) {
+      await signOutUrbanAI();
+    }
     localStorage.removeItem('urbanai-user');
     localStorage.removeItem('urbanai-token');
     setUser(null);
