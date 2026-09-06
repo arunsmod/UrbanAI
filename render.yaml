@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: urbanai-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: API_RELOAD
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD_HASH
+        sync: false
+      - key: MODEL_PATH
+        value: backend/data/flood_risk_model.joblib
+      - key: DATA_PATH
+        value: backend/data/flood_data.csv
+      - key: ENABLE_LOGGING
+        value: "true"
+      - key: ENABLE_VALIDATION
+        value: "true"
