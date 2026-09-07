@@ -2,7 +2,7 @@ name: Keep Render API Warm
 
 on:
   schedule:
-    - cron: "*/14 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -13,6 +13,6 @@ jobs:
         env:
           RENDER_HEALTH_URL: ${{ secrets.RENDER_HEALTH_URL || 'https://urbanai-api.onrender.com/' }}
         run: |
-          curl --fail --silent --show-error --max-time 30 \
+          curl --fail --silent --show-error --max-time 120 \
             "${RENDER_HEALTH_URL}?warmup=$(date +%s)"
           echo "Render API responded successfully"

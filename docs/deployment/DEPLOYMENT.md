@@ -63,7 +63,7 @@ Render installs `backend/requirements.txt` and runs Uvicorn on the assigned `$PO
 
 ### Render warm-up workflow
 
-The repository includes `.github/workflows/warm-render-backend.yml`, which pings `https://urbanai-api.onrender.com/` every 14 minutes and can also be started manually from the GitHub Actions tab.
+The repository includes `.github/workflows/warm-render-backend.yml`, which pings `https://urbanai-api.onrender.com/` every 10 minutes and can also be started manually from the GitHub Actions tab.
 
 The workflow already contains the public Render URL. A `RENDER_HEALTH_URL` GitHub repository secret is optional and can override it if the backend URL changes:
 
