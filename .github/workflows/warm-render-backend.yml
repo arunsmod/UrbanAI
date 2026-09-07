@@ -1,0 +1,18 @@
+name: Keep Render API Warm
+
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  warm-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render health endpoint
+        env:
+          RENDER_HEALTH_URL: ${{ secrets.RENDER_HEALTH_URL || 'https://urbanai-api.onrender.com/' }}
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            "${RENDER_HEALTH_URL}?warmup=$(date +%s)"
+          echo "Render API responded successfully"

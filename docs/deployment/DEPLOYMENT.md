@@ -61,6 +61,18 @@ ADMIN_PASSWORD_HASH=<generated PBKDF2 hash>
 
 Render installs `backend/requirements.txt` and runs Uvicorn on the assigned `$PORT`. Free services sleep when idle. The local SQLite file is for review only and is not durable production storage.
 
+### Render warm-up workflow
+
+The repository includes `.github/workflows/warm-render-backend.yml`, which pings `https://urbanai-api.onrender.com/` every 14 minutes and can also be started manually from the GitHub Actions tab.
+
+The workflow already contains the public Render URL. A `RENDER_HEALTH_URL` GitHub repository secret is optional and can override it if the backend URL changes:
+
+```text
+RENDER_HEALTH_URL=https://urbanai-api.onrender.com/
+```
+
+This is only a best-effort warm-up. GitHub scheduled workflows can be delayed or skipped, and Render may still cold-start the service. Test the deployed site immediately before the hackathon presentation and keep frontend demo fallback data available.
+
 ### Configuration for Production
 
 **`.env` Settings:**
