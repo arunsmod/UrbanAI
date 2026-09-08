@@ -60,8 +60,15 @@ export default function App() {
         setZones(data);
         setSelectedZoneId(data[0]?.id || null);
       } catch (err) {
-        console.error("Failed to load wards databases:", err);
-        setLoadError(err.message);
+        try {
+          await apiService.checkHealth();
+          const data = await apiService.getWards();
+          setZones(data);
+          setSelectedZoneId(data[0]?.id || null);
+        } catch (retryError) {
+          console.error("Failed to load wards databases:", retryError);
+          setLoadError(retryError.message || err.message);
+        }
       } finally {
         setLoading(false);
       }
