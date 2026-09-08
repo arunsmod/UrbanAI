@@ -29,12 +29,13 @@ function normalizeWard(ward) {
 }
 
 async function request(endpoint, options = {}) {
+  const { timeoutMs = 10000, ...fetchOptions } = options;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
-      ...options,
+      ...fetchOptions,
       headers: {
         'Content-Type': 'application/json',
         ...(localStorage.getItem('urbanai-token')
@@ -55,6 +56,10 @@ async function request(endpoint, options = {}) {
 }
 
 export const apiService = {
+  async checkHealth() {
+    return request('/');
+  },
+
   async login(email, password) {
     return request('/auth/login', {
       method: 'POST',
@@ -63,7 +68,7 @@ export const apiService = {
   },
 
   async getWards() {
-    const data = await request('/wards');
+    const data = await request('/wards', { timeoutMs: 90000 });
     return (data.wards || []).map(normalizeWard);
   },
 
